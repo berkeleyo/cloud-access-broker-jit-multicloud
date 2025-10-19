@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "LeastPrivilegeExample",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:Describe*",
+        "s3:ListAllMyBuckets"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "DateLessThan": {
+          "aws:TokenIssueTime": "REPLACEME-SESSION-TTL"
+        }
+      }
+    }
+  ]
+}

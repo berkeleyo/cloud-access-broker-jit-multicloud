@@ -1,0 +1,46 @@
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Node/yarn/pnpm (if used for docs tooling)
+node_modules/
+pnpm-lock.yaml
+yarn.lock
+
+# Python virtualenvs and cache (if scripts use python)
+.venv/
+__pycache__/
+*.pyc
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
+terraform.tfvars
+terraform.tfvars.json
+
+# Secrets & env (none should be committed)
+.env
+.env.*
+*.key
+*.pem
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Coverage / reports
+coverage/
+dist/
+build/
+reports/
+
+# Macros
+*.log
