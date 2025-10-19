@@ -1,33 +1,33 @@
-# Cloud Access Broker — Just‑in‑Time (JIT) Admin for Multi‑Cloud (Azure • AWS • GCP) 🚀
+# Cloud Access Broker — Just-in-Time (JIT) Admin for Multi-Cloud (Azure • AWS • GCP) 🚀
 
 ![Redaction](https://img.shields.io/badge/Redaction-No%20secrets%2C%20IPs%2C%20or%20tenant%20data-brightgreen?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Production%20Ready-1f6feb?style=for-the-badge)
 
-> **Concept**: A **provider‑agnostic Cloud Access Broker** that grants **time‑bound, least‑privilege** admin access across **Azure, AWS, and GCP** for support engineers and partners. Built to reflect real MSP experience (e.g., Daisy‑style multi‑tenant operations), balancing **speed of incident response** with **strong guardrails**.
-
-This repository is a production‑grade documentation + runbook pack you can drop into a new GitHub repo. It includes lifecycle stages, cutover and rollback, and clean scripts you can adapt to your own automation.
+> **Concept:** A provider-agnostic **Cloud Access Broker** that delivers **time-bound, least-privilege** administrative access across **Azure**, **AWS**, and **GCP**.  
+> Designed for environments where engineers require elevated access under controlled, auditable, and policy-driven conditions.
 
 ---
 
-## 🎯 Why this project?
-- **JIT elevation** via Entra ID (PIM), AWS STS `AssumeRole` with **External ID**, and GCP **Workload Identity Federation**.
-- **Central policy**: requests are approved in Entra or ServiceNow; on approval, short‑lived credentials are issued and auto‑revoked.
-- **Audit‑first**: every grant is logged and bound to a change or incident reference.
-- **Cloud‑agnostic**: works the same way for Azure subscriptions, AWS accounts, and GCP projects.
+## 🎯 Objective
+
+- Enable **Just-in-Time (JIT)** elevation across multiple cloud providers.  
+- Integrate **identity governance**, **conditional access**, and **short-lived credentials**.  
+- Maintain full **audit visibility** and **compliance alignment** (ISO 27001, SOC2, CIS).  
+- Remove standing admin permissions and reduce attack surface.  
 
 ---
 
 ## 🧭 Lifecycle Stages
 
-1. **Discover** — Inventory identities, roles, and privileged tasks per cloud.
-2. **Design** — Define JIT RBAC roles, max durations, and approval flows.
-3. **Build** — Provision roles and trust (Azure PIM roles; AWS IAM Roles + External ID; GCP IAM + WIF pool).
-4. **Integrate** — Wire approvals (e.g., Entra PIM/Access Packages) and CI/CD (optional GitHub Actions) to mint short‑lived creds.
-5. **Pilot** — Run controlled pilots with verbose audit logging.
-6. **Harden** — Enforce device posture (Compliance / CA), MFA, IP restrictions, and session recording (where applicable).
-7. **Cutover** — Switch operational access to JIT, retire standing admin.
-8. **Operate** — Runbooks, monitoring, and periodic access reviews.
-9. **Evolve** — Add new clouds/accounts/projects, tune durations, expand automation.
+1. **Discover** — Identify privileged roles, identities, and elevation pathways across all clouds.  
+2. **Design** — Define JIT RBAC roles, durations, and approval workflows.  
+3. **Build** — Establish trust models (Azure PIM, AWS IAM + External ID, GCP WIF).  
+4. **Integrate** — Implement automation and approval logic using Entra, ITSM, or custom brokers.  
+5. **Pilot** — Validate least-privilege, time-limited access across selected accounts or projects.  
+6. **Harden** — Enforce MFA, device compliance, location restrictions, and logging.  
+7. **Cutover** — Transition from standing admin access to JIT-managed access.  
+8. **Operate** — Maintain runbooks, periodic access reviews, and SIEM correlation.  
+9. **Evolve** — Extend model to additional tenants, accounts, or environments.
 
 ---
 
@@ -42,68 +42,88 @@ sequenceDiagram
   participant Azure as Azure
   participant AWS as AWS STS/IAM
   participant GCP as GCP IAM/WIF
+
   Eng->>CAB: Request JIT role (ticket/ref)
   CAB->>Entra: Validate user, device posture, approval
-  Entra-->>CAB: Approval granted + max duration
+  Entra-->>CAB: Approval granted + duration
   CAB->>Azure: Activate eligible PIM role (time-bound)
   CAB->>AWS: AssumeRole with ExternalId (STS creds)
   CAB->>GCP: Exchange via WIF for short-lived token
-  Eng-->>Azure: Perform scoped task (audit)
-  Eng-->>AWS: Perform scoped task (CloudTrail)
+  Eng-->>Azure: Perform scoped task (audit logged)
+  Eng-->>AWS: Perform scoped task (CloudTrail logged)
   Eng-->>GCP: Perform scoped task (Audit Logs)
-  CAB->>All: Auto-expire & revoke; write audit record
+  CAB->>Azure: Revoke PIM role
+  CAB->>AWS: Invalidate STS session
+  CAB->>GCP: Revoke token
 ```
 
 ---
 
-## 🧩 What’s in this repo?
+## 🧩 Repository Structure
 
-- `README.md` — You’re here. Project narrative, lifecycle, and diagram.
-- `RUNBOOK.md` — Production operations: request, approve, grant, revoke, audit.
-- `docs/` — Focused design docs:
-  - `OVERVIEW.md` — Executive summary & scope.
-  - `ARCHITECTURE.md` — Trust, roles, and data flows.
-  - `CUTOVER_CHECKLIST.md` — Go‑live steps with verification gates.
-  - `ROLLBACK.md` — Safe fallback to pre‑JIT state.
-  - `SECURITY.md` — Controls, risks, and mitigations.
-- `scripts/` — Practical starter scripts (bash & PowerShell) + example policy JSON.
-
-> 🔒 **Redaction statement**: This repository contains **no secrets, tenant IDs, public IPs, customer names, or internal identifiers**. Replace all placeholders before use in your environment.
-
----
-
-## 🧪 Tested clouds (conceptually)
-
-- **Azure**: Entra ID PIM eligible roles (e.g., `User Access Administrator`, custom RBAC), Conditional Access (MFA, compliant device), defender alerts.
-- **AWS**: IAM role per account with minimal policy; federation via `AssumeRole` + External ID; session duration ≤ 1h; CloudTrail enabled.
-- **GCP**: Workload Identity Federation (OIDC) pool; least‑privilege roles (`roles/viewer` + per‑task), Access Context Manager for device/IP.
+| Path | Description |
+|------|--------------|
+| `README.md` | Project overview, lifecycle, and diagram |
+| `RUNBOOK.md` | Operational steps for access request, approval, and audit |
+| `docs/OVERVIEW.md` | Scope and high-level summary |
+| `docs/ARCHITECTURE.md` | Trust and federation model |
+| `docs/CUTOVER_CHECKLIST.md` | Go-live checklist |
+| `docs/ROLLBACK.md` | Safe revert plan |
+| `docs/SECURITY.md` | Controls, posture, and redaction statement |
+| `scripts/` | Example automation placeholders (Azure/AWS/GCP) |
 
 ---
 
-## 🚀 Getting started
+## ☁️ Multi-Cloud Model
+
+### **Azure**
+- Entra ID PIM with eligible roles.  
+- Conditional Access enforcing MFA + compliant device.  
+- Role duration limited to ≤ 60 minutes.
+
+### **AWS**
+- IAM Roles trusted to an IdP using **OIDC/SAML** with **External ID**.  
+- Session policies restrict actions and enforce short TTL.  
+- CloudTrail logging enabled for all activity.
+
+### **GCP**
+- **Workload Identity Federation (WIF)** using OIDC trust.  
+- Role bindings use temporary impersonation tokens.  
+- Audit logs streamed to Cloud Logging and SIEM.
+
+---
+
+## ✅ Governance & Audit
+
+- Every elevation is linked to a **ticket or change reference**.  
+- **Logs** captured in Entra, Azure Activity, CloudTrail, and GCP Audit Logs.  
+- **Access reviews** scheduled quarterly per compliance framework.  
+- Break-glass accounts held under dual control, reviewed post-use.
+
+---
+
+## 🔒 Security Posture
+
+- Least privilege enforced by role design and session policies.  
+- Conditional Access gates all privileged sessions.  
+- Credentials expire automatically.  
+- Repository contains **no secrets, IPs, tenant identifiers, or customer data**.
+
+---
+
+## 🧰 Getting Started
 
 ```bash
-# Clone your new repo and add this pack
 git init
 git add .
 git commit -m "feat: cloud access broker JIT docs (initial)"
 git branch -M main
-git remote add origin <your-new-github-repo-url>
+git remote add origin <your-repo-url>
 git push -u origin main
 ```
-
-See [`RUNBOOK.md`](./RUNBOOK.md) to operate day‑to‑day.
-
----
-
-## ✅ Compliance & audit
-
-- All grants map to a **ticket or change ID**.
-- Logs in **Entra**, **Azure Activity**, **AWS CloudTrail**, and **GCP Audit Logs**.
-- Quarterly access review aligned to ISO 27001/27017 control families.
 
 ---
 
 ## 📄 License
 
-MIT — use and adapt freely. Keep the redaction posture.
+MIT License — for educational and professional adaptation.
